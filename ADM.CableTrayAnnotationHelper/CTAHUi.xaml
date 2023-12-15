@@ -63,7 +63,8 @@
                   Grid.ColumnSpan="2"
                   VerticalContentAlignment="Center"
                   x:Name="ComboBoxCableTray"
-                  ToolTip="Выберите имя типа для аннотирования лотков"/>
+                  ToolTip="Выберите имя типа для аннотирования лотков"
+                  SelectionChanged="ComboBoxCableTray_SelectionChanged"/>
 
         <CheckBox Margin="10,10,100,10"
                   Grid.Row="2"
@@ -86,7 +87,8 @@
                   Grid.ColumnSpan="2"
                   VerticalContentAlignment="Center"
                   x:Name="ComboBoxConduit"
-                  ToolTip="Выберите имя типа для аннотирования коробов"/>
+                  ToolTip="Выберите имя типа для аннотирования коробов"
+                  SelectionChanged="ComboBoxConduit_SelectionChanged"/>
 
         <Button Margin="10"
                 Grid.Row="3"

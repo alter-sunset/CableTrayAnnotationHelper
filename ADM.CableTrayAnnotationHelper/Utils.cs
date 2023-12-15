@@ -10,6 +10,8 @@ using System.Threading;
 using System.IO;
 using System.Reflection;
 using System.Windows.Media.Imaging;
+using System.Windows.Forms;
+using View = Autodesk.Revit.DB.View;
 
 namespace ADM.CableTrayAnnotationHelper
 {

@@ -1,5 +1,7 @@
 ﻿using Autodesk.Revit.ApplicationServices;
+using Autodesk.Revit.Creation;
 using Autodesk.Revit.DB;
+using Autodesk.Revit.DB.Electrical;
 using Autodesk.Revit.UI;
 using System;
 using System.Collections.Generic;
@@ -8,6 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Application = Autodesk.Revit.ApplicationServices.Application;
+using Document = Autodesk.Revit.DB.Document;
 using View = Autodesk.Revit.DB.View;
 
 namespace ADM.CableTrayAnnotationHelper
@@ -16,86 +19,98 @@ namespace ADM.CableTrayAnnotationHelper
     {
         public override void Execute(UIApplication uiApp, CTAHUi ui)
         {
-            DateTime start = DateTime.Now;
-
             Application application = uiApp.Application;
             UIDocument uIDocument = uiApp.ActiveUIDocument;
-            Document document = uIDocument.Document;
+            Document mainDocument = uIDocument.Document;
             View view = uIDocument.ActiveGraphicalView;
 
-            List<Element> cableTrays = new FilteredElementCollector(document, view.Id)
-                .OfCategory(BuiltInCategory.OST_CableTray)
-                .Where(e => e != null)
-                .ToList();
-
-            //missing conduit methods
+            Family familyDetail = ui.Family;
+            FamilySymbol symbolConduit = ui.SymbolConduit;
+            FamilySymbol symbolCableTray = ui.SymbolCableTray;
 
             string paramIdName = "ADSK_Марка";
-            string familySymbolName = "Test_shit";
 
-            FamilySymbol familySymbol = new FilteredElementCollector(document)
-                .OfClass(typeof(FamilySymbol))
-                .OfCategory(BuiltInCategory.OST_DetailComponents)
-                .Where(e => e != null)
-                .FirstOrDefault(e => e.Name == familySymbolName) as FamilySymbol;
-
-            List<Element> existingDetailLines = new FilteredElementCollector(document, view.Id)
-                .OfClass(typeof(FamilyInstance))
-                .OfCategory(BuiltInCategory.OST_DetailComponents)
-                .Where(e => e.Name == familySymbolName)
-                .Where(e => e != null)
+            List<Document> links = new FilteredElementCollector(mainDocument)
+                .OfClass(typeof(RevitLinkInstance))
+                .Select(l => l as RevitLinkInstance)
+                .Select(l => l.GetLinkDocument())
+                .Where(d => d != null)
                 .ToList();
 
-            /*using (Transaction transactionCheck = new Transaction(document))
-            {
-                transactionCheck.Start("Check existing");
+            List<Element> existingDetailLines = new FilteredElementCollector(mainDocument, view.Id)
+                .OfClass(typeof(FamilyInstance))
+                .OfCategory(BuiltInCategory.OST_DetailComponents)
+                .Where(e => e != null)
+                .Where(e => e.Name == symbolCableTray.Name || e.Name == symbolConduit.Name)
+                .ToList();
 
-                foreach (Element cableTray in cableTrays)
+            using (Transaction transaction = new Transaction(mainDocument))
+            {
+                transaction.Start("Размещение аннотаций лотков и коробов");
+
+                symbolConduit.Activate();
+                symbolCableTray.Activate();
+
+                foreach (Document linkedDocument in links)
                 {
-                    if (cableTray is null)
+                    if (linkedDocument is null)
                     {
                         continue;
                     }
 
-                    if (existingDetailLines.
-                            Any(e => e.LookupParameter(paramIdName).AsString() == cableTray.UniqueId))
+                    if ((bool)ui.CheckBoxConduit.IsChecked)
                     {
-                        Element existingDetailLine = existingDetailLines
-                                .FirstOrDefault(e => e.LookupParameter(paramIdName).AsString() == cableTray.UniqueId);
-
-                        if (!Utils.AreAligned(cableTray, existingDetailLine))
+                        using (FilteredElementCollector collector = new FilteredElementCollector(linkedDocument, view.Id))
                         {
-                            //doesn't work
-                            document.Delete(existingDetailLine.Id);
+                            List<Element> conduits = collector
+                                .OfCategory(BuiltInCategory.OST_Conduit)
+                                .Where(e => e != null)
+                                .ToList();
+
+                            foreach (Element conduit in conduits)
+                            {
+                                if (conduit is null
+                                    || existingDetailLines.
+                                        Any(e => e.LookupParameter(paramIdName).AsString() == conduit.UniqueId))
+                                {
+                                    continue;
+                                }
+
+                                Utils.PlaceNewDetailLine(mainDocument, view, symbolConduit, conduit, paramIdName);
+                            }
                         }
                     }
-                }
 
-                transactionCheck.Commit();
-            }*/
-
-            using (Transaction transaction = new Transaction(document))
-            {
-                transaction.Start("Add annotations");
-
-                familySymbol.Activate();
-
-                foreach (Element cableTray in cableTrays)
-                {
-                    if (cableTray is null
-                        || existingDetailLines.
-                            Any(e => e.LookupParameter(paramIdName).AsString() == cableTray.UniqueId))
+                    if ((bool)ui.CheckBoxCableTray.IsChecked)
                     {
-                        continue;
-                    }
+                        using (FilteredElementCollector collector1 = new FilteredElementCollector(linkedDocument, view.Id))
+                        {
+                            List<Element> cableTrays = collector1
+                                .OfCategory(BuiltInCategory.OST_CableTray)
+                                .Where(e => e != null)
+                                .ToList();
 
-                    Utils.PlaceNewDetailLine(document, view, familySymbol, cableTray, paramIdName);
+                            foreach (Element cableTray in cableTrays)
+                            {
+                                if (cableTray is null
+                                    || existingDetailLines.
+                                        Any(e => e.LookupParameter(paramIdName).AsString() == cableTray.UniqueId))
+                                {
+                                    continue;
+                                }
+
+                                Utils.PlaceNewDetailLine(mainDocument, view, symbolCableTray, cableTray, paramIdName);
+                            }
+                        }
+                    }
+                    if (!(bool)ui.CheckBoxConduit.IsChecked && !(bool)ui.CheckBoxCableTray.IsChecked)
+                    {
+                        transaction.RollBack();
+                    }
                 }
 
                 transaction.Commit();
             }
-
-            MessageBox.Show($"Готово! Затраченное время:{DateTime.Now - start}");
         }
     }
 }
