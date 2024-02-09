@@ -28,89 +28,69 @@ namespace ADM.CableTrayAnnotationHelper
             FamilySymbol symbolConduit = ui.SymbolConduit;
             FamilySymbol symbolCableTray = ui.SymbolCableTray;
 
-            string paramIdName = "ADSK_Марка";
-
-            List<Document> links = new FilteredElementCollector(mainDocument)
-                .OfClass(typeof(RevitLinkInstance))
-                .Select(l => l as RevitLinkInstance)
-                .Select(l => l.GetLinkDocument())
-                .Where(d => d != null)
-                .ToList();
-
-            List<Element> existingDetailLines = new FilteredElementCollector(mainDocument, view.Id)
-                .OfClass(typeof(FamilyInstance))
-                .OfCategory(BuiltInCategory.OST_DetailComponents)
-                .Where(e => e != null)
-                .Where(e => e.Name == symbolCableTray.Name || e.Name == symbolConduit.Name)
-                .ToList();
-
-            using (Transaction transaction = new Transaction(mainDocument))
+            List<ParameterAssociation> paramsTable = new List<ParameterAssociation>
             {
-                transaction.Start("Размещение аннотаций лотков и коробов");
+                new ParameterAssociation(){ParameterIn = "Марка", ParameterOut = "ADSK_Примечание", ParameterType = ParameterType.Id},
+                new ParameterAssociation(){ParameterIn = "Этаж", ParameterOut = "Этаж", ParameterType = ParameterType.String},
+                new ParameterAssociation(){ParameterIn = "Параметры фильтрации", ParameterOut = "Параметры фильтрации", ParameterType = ParameterType.String},
+                new ParameterAssociation(){ParameterIn = "Высота", ParameterOut = "ADSK_Размер_Высота", ParameterType = ParameterType.Double},
+                new ParameterAssociation(){ParameterIn = "Длина", ParameterOut = "ADSK_Размер_Длина", ParameterType = ParameterType.Double},
+                new ParameterAssociation(){ParameterIn = "Ширина", ParameterOut = "ADSK_Размер_Ширина", ParameterType = ParameterType.Double}
+            };
 
-                symbolConduit.Activate();
-                symbolCableTray.Activate();
+            List<Document> links = Utils.GetLinkedDocuments(mainDocument);
 
-                foreach (Document linkedDocument in links)
+            List<FamilyInstance> existingDetailLinesCableTray
+                = Utils.ExistingDetailLines(mainDocument, view, familyDetail, symbolCableTray);
+
+            List<FamilyInstance> existingDetailLinesConduit
+                = Utils.ExistingDetailLines(mainDocument, view, familyDetail, symbolConduit);
+
+            try
+            {
+                //problem with viewId, it seems i need to provide a view from a linked document, not main document
+                using (Transaction transaction = new Transaction(mainDocument))
                 {
-                    if (linkedDocument is null)
-                    {
-                        continue;
-                    }
+                    transaction.Start("Размещение аннотаций лотков и коробов");
 
-                    if ((bool)ui.CheckBoxConduit.IsChecked)
+                    symbolConduit.Activate();
+                    symbolCableTray.Activate();
+
+                    foreach (Document linkedDocument in links)
                     {
-                        using (FilteredElementCollector collector = new FilteredElementCollector(linkedDocument, view.Id))
+                        if (linkedDocument is null)
                         {
-                            List<Element> conduits = collector
-                                .OfCategory(BuiltInCategory.OST_Conduit)
-                                .Where(e => e != null)
-                                .ToList();
+                            continue;
+                        }
 
-                            foreach (Element conduit in conduits)
-                            {
-                                if (conduit is null
-                                    || existingDetailLines.
-                                        Any(e => e.LookupParameter(paramIdName).AsString() == conduit.UniqueId))
-                                {
-                                    continue;
-                                }
+                        if ((bool)ui.CheckBoxConduit.IsChecked)
+                        {
+                            Utils.PlaceTheLines(mainDocument, linkedDocument, view,
+                                BuiltInCategory.OST_Conduit, existingDetailLinesConduit, symbolConduit,
+                                paramsTable);
+                        }
 
-                                Utils.PlaceNewDetailLine(mainDocument, view, symbolConduit, conduit, paramIdName);
-                            }
+                        if ((bool)ui.CheckBoxCableTray.IsChecked)
+                        {
+                            Utils.PlaceTheLines(mainDocument, linkedDocument, view,
+                                BuiltInCategory.OST_CableTray, existingDetailLinesCableTray, symbolCableTray,
+                                paramsTable);
+                        }
+
+                        if (!(bool)ui.CheckBoxConduit.IsChecked && !(bool)ui.CheckBoxCableTray.IsChecked)
+                        {
+                            transaction.RollBack();
                         }
                     }
 
-                    if ((bool)ui.CheckBoxCableTray.IsChecked)
-                    {
-                        using (FilteredElementCollector collector1 = new FilteredElementCollector(linkedDocument, view.Id))
-                        {
-                            List<Element> cableTrays = collector1
-                                .OfCategory(BuiltInCategory.OST_CableTray)
-                                .Where(e => e != null)
-                                .ToList();
-
-                            foreach (Element cableTray in cableTrays)
-                            {
-                                if (cableTray is null
-                                    || existingDetailLines.
-                                        Any(e => e.LookupParameter(paramIdName).AsString() == cableTray.UniqueId))
-                                {
-                                    continue;
-                                }
-
-                                Utils.PlaceNewDetailLine(mainDocument, view, symbolCableTray, cableTray, paramIdName);
-                            }
-                        }
-                    }
-                    if (!(bool)ui.CheckBoxConduit.IsChecked && !(bool)ui.CheckBoxCableTray.IsChecked)
-                    {
-                        transaction.RollBack();
-                    }
+                    transaction.Commit();
                 }
-
-                transaction.Commit();
             }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString());
+            }
+
         }
     }
 }

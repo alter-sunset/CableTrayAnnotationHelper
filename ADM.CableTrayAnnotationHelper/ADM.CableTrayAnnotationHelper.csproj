@@ -61,6 +61,7 @@
     <Compile Include="CTAHUi.xaml.cs">
       <DependentUpon>CTAHUi.xaml</DependentUpon>
     </Compile>
+    <Compile Include="ParameterAssociation.cs" />
     <Compile Include="RevitEventWrapper.cs" />
     <Compile Include="Utils.cs" />
     <Compile Include="CTAH.cs" />

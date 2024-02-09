@@ -1,10 +1,7 @@
-﻿using Autodesk.Revit.DB.Electrical;
-using Autodesk.Revit.DB;
+﻿using Autodesk.Revit.DB;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Diagnostics;
 using System.Threading;
 using System.IO;
@@ -12,36 +9,93 @@ using System.Reflection;
 using System.Windows.Media.Imaging;
 using System.Windows.Forms;
 using View = Autodesk.Revit.DB.View;
+using Document = Autodesk.Revit.DB.Document;
 
 namespace ADM.CableTrayAnnotationHelper
 {
     public static class Utils
     {
-        public static void PlaceNewDetailLine(Document document, View view, FamilySymbol familySymbol, Element cableTray, string paramIdName)
+        public static void PlaceTheLines(Document mainDocument,
+            Document linkedDocument,
+            View view,
+            BuiltInCategory builtInCategory,
+            List<FamilyInstance> existingDetailLines,
+            FamilySymbol familySymbol,
+            List<ParameterAssociation> paramsTable)
         {
-            Line line = Utils.GetTheLine(cableTray);
-            DetailCurve detailLine = document.Create.NewDetailCurve(view, line);
-            Line baseLine = detailLine.GeometryCurve as Line;
+            //problem with viewId, it seems i need to provide a view from a linked document, not main document
+            using (FilteredElementCollector collector = new FilteredElementCollector(linkedDocument, view.Id))
+            {
+                List<Element> elements = collector
+                    .OfCategory(builtInCategory)
+                    .Where(e => e != null)
+                    .ToList();
 
-            FamilyInstance insertNew = document.Create
-            .NewFamilyInstance(baseLine, familySymbol, view);
+                foreach (Element element in elements)
+                {
+                    if (element is null
+                        || existingDetailLines.
+                            Any(e => e.LookupParameter(paramsTable
+                                    .First(p => p.ParameterType == ParameterType.Id)
+                                    .ParameterOut)
+                                .AsString() == element.UniqueId))
+                    {
+                        continue;
+                    }
+                    Line line = GetTheLine(element);
+                    DetailCurve detailLine = mainDocument.Create.NewDetailCurve(view, line);
+                    Line baseLine = detailLine.GeometryCurve as Line;
 
-            insertNew.LookupParameter(paramIdName).Set(cableTray.UniqueId);
+                    FamilyInstance insertNew = mainDocument.Create
+                    .NewFamilyInstance(baseLine, familySymbol, view);
 
-            document.Delete(detailLine.Id);
+                    foreach (ParameterAssociation param in paramsTable)
+                    {
+                        Parameter valueIn = element.LookupParameter(param.ParameterIn);
+                        Parameter valueOut = insertNew.LookupParameter(param.ParameterOut);
+                        if (valueIn is null || valueOut is null)
+                        {
+                            continue;
+                        }
+                        switch (param.ParameterType)
+                        {
+                            case ParameterType.String:
+                                if (valueIn.StorageType == StorageType.String)
+                                {
+                                    string valueString = valueIn.AsString();
+                                    valueOut.Set(valueString);
+                                }
+                                break;
+                            case ParameterType.Double:
+                                if (valueIn.StorageType == StorageType.Double)
+                                {
+                                    double valueDouble = valueIn.AsDouble();
+                                    valueOut.Set(valueDouble);
+                                }
+                                break;
+                            case ParameterType.Id:
+                                valueOut.Set(element.UniqueId);
+                                break;
+                        }
+                    }
+                    mainDocument.Delete(detailLine.Id);
+                }
+            }
         }
+
         public static Line GetTheLine(Element element)
         {
             Line line = (element.Location as LocationCurve).Curve as Line;
             return line;
         }
 
-        public static bool AreAligned(Element cableTray, Element detailLineInstance)
+        public static bool AreAligned(Element element, Element detailLineInstance)
         {
-            Line cableTrayLine = GetTheLine(cableTray);
+            //doesn't work
+            Line elementLine = GetTheLine(element);
             Line detailLine = GetTheLine(detailLineInstance);
 
-            SetComparisonResult result = cableTrayLine.Intersect(detailLine);
+            SetComparisonResult result = elementLine.Intersect(detailLine);
 
             if (result == SetComparisonResult.Overlap)
             {
@@ -75,6 +129,31 @@ namespace ADM.CableTrayAnnotationHelper
             {
                 return null;
             }
+        }
+
+        public static List<FamilyInstance> ExistingDetailLines(Document document, View view, Family family, FamilySymbol symbol)
+        {
+            List<FamilyInstance> existingDetailLines = new FilteredElementCollector(document, view.Id)
+                .OfClass(typeof(FamilyInstance))
+                .OfCategory(BuiltInCategory.OST_DetailComponents)
+                .Where(e => e != null)
+                .Select(e => e as FamilyInstance)
+                .Where(e => e.Symbol.FamilyName == family.Name && e.Name == symbol.Name)
+                .ToList();
+
+            return existingDetailLines;
+        }
+
+        public static List<Document> GetLinkedDocuments(Document document)
+        {
+            List<Document> links = new FilteredElementCollector(document)
+                .OfClass(typeof(RevitLinkInstance))
+                .Select(l => l as RevitLinkInstance)
+                .Select(l => l.GetLinkDocument())
+                .Where(d => d != null)
+                .ToList();
+
+            return links;
         }
     }
 }
