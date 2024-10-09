@@ -1,14 +1,11 @@
-﻿using Autodesk.Revit.DB;
+﻿using Autodesk.Revit.Attributes;
+using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace ADM.CableTrayAnnotationHelper
+namespace CableTrayAnnotationHelper
 {
-    [Autodesk.Revit.Attributes.Transaction(Autodesk.Revit.Attributes.TransactionMode.Manual)]
+    [Transaction(TransactionMode.Manual)]
     public class CTAH : IExternalCommand
     {
         public virtual Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
@@ -28,9 +25,6 @@ namespace ADM.CableTrayAnnotationHelper
 
     public class CTAHCommand_Availability : IExternalCommandAvailability
     {
-        public bool IsCommandAvailable(UIApplication uiApp, CategorySet categorySet)
-        {
-            return false;
-        }
+        public bool IsCommandAvailable(UIApplication uiApp, CategorySet categorySet) => false;
     }
 }

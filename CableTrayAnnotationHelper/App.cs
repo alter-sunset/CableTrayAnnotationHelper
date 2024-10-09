@@ -1,34 +1,32 @@
-﻿using Autodesk.Revit.ApplicationServices;
-using Autodesk.Revit.DB;
+﻿using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Windows.Media.Imaging;
 
-namespace ADM.CableTrayAnnotationHelper
+namespace CableTrayAnnotationHelper
 {
     public class App : IExternalApplication
     {
         public static App ThisApp;
-
-        public static CTAHUi _mMyFormCTAH;
+        private static CTAHUi _mMyFormCTAH;
 
         public Result OnStartup(UIControlledApplication a)
         {
-            _mMyFormCTAH = null;
             ThisApp = this;
+            _mMyFormCTAH = null;
 
             RibbonPanel panel = RibbonPanel(a);
             string thisAssemblyPath = Assembly.GetExecutingAssembly().Location;
-            string[] cableTrayIconPath = { "ADM.CableTrayAnnotationHelper.cableTray.png", "ADM.CableTrayAnnotationHelper.cableTray_16.png" };
+            string[] cableTrayIconPath = ["CableTrayAnnotationHelper.Resources.cableTray.png",
+                "CableTrayAnnotationHelper.Resources.cableTray_16.png"];
 
-            PushButtonData CTAHButtonData = new PushButtonData(
+            PushButtonData CTAHButtonData = new(
                    "Лотки и короба",
                    "Лотки и\nкороба",
                    thisAssemblyPath,
-                   "ADM.CableTrayAnnotationHelper.CTAH");
+                   "CableTrayAnnotationHelper.CTAH");
 
             string CTAHToolTip = "Расстановка аннотаций лотков и коробов";
             CreateNewPushButton(panel, CTAHButtonData, CTAHToolTip, cableTrayIconPath);
@@ -36,20 +34,15 @@ namespace ADM.CableTrayAnnotationHelper
             return Result.Succeeded;
         }
 
-        public Result OnShutdown(UIControlledApplication a)
-        {
-            return Result.Succeeded;
-        }
+        public Result OnShutdown(UIControlledApplication a) => Result.Succeeded;
 
         public void ShowFormCTAH(UIApplication uiApp)
         {
             if (_mMyFormCTAH != null && _mMyFormCTAH == null) return;
 
-            EventHandlerCTAHUiArg evUi = new EventHandlerCTAHUiArg();
+            EventHandlerCTAHUiArg evUi = new();
 
-            Application application = uiApp.Application;
-            UIDocument uIDocument = uiApp.ActiveUIDocument;
-            Document document = uIDocument.Document;
+            Document document = uiApp.ActiveUIDocument.Document;
 
             Dictionary<Family, List<FamilySymbol>> families = new FilteredElementCollector(document)
                 .OfClass(typeof(FamilySymbol))
@@ -60,15 +53,15 @@ namespace ADM.CableTrayAnnotationHelper
                 .GroupBy(e => e.Family, new FamilyComparer())
                 .ToDictionary(e => e.Key, e => e.ToList());
 
-            _mMyFormCTAH = new CTAHUi(uiApp, evUi, families) { Height = 240, Width = 800 };
+            _mMyFormCTAH = new CTAHUi(evUi, families) { Height = 240, Width = 800 };
             _mMyFormCTAH.Show();
         }
 
         #region Ribbon Panel
 
-        public RibbonPanel RibbonPanel(UIControlledApplication a)
+        public static RibbonPanel RibbonPanel(UIControlledApplication a)
         {
-            string tab = "ADM"; // Tab name
+            string tab = "AlterTools"; // Tab name
             // Empty ribbon panel 
             RibbonPanel ribbonPanel = null;
             // Try to create ribbon tab. 
@@ -76,20 +69,14 @@ namespace ADM.CableTrayAnnotationHelper
             {
                 a.CreateRibbonTab(tab);
             }
-            catch (Exception ex)
-            {
-                Utils.HandleError(ex);
-            }
+            catch { }
 
             // Try to create ribbon panel.
             try
             {
                 RibbonPanel panel = a.CreateRibbonPanel(tab, "ЭОМ");
             }
-            catch (Exception ex)
-            {
-                Utils.HandleError(ex);
-            }
+            catch { }
 
             // Search existing tab for your panel.
             List<RibbonPanel> panels = a.GetRibbonPanels(tab);

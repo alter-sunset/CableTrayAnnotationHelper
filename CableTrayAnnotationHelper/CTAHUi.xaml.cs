@@ -1,28 +1,22 @@
 ﻿using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
 using MessageBox = System.Windows.Forms.MessageBox;
 
-namespace ADM.CableTrayAnnotationHelper
+namespace CableTrayAnnotationHelper
 {
     public partial class CTAHUi : Window
     {
         private readonly EventHandlerCTAHUiArg _eventHandlerCTAHUiArg;
-
         private readonly Dictionary<Family, List<FamilySymbol>> _families;
-
         public Family Family;
         public FamilySymbol SymbolConduit;
         public FamilySymbol SymbolCableTray;
 
-        public CTAHUi(UIApplication uiApp, EventHandlerCTAHUiArg eventHandlerCTAHUiArg, Dictionary<Family, List<FamilySymbol>> families)
+        public CTAHUi(EventHandlerCTAHUiArg eventHandlerCTAHUiArg, Dictionary<Family, List<FamilySymbol>> families)
         {
             InitializeComponent();
 
@@ -41,7 +35,6 @@ namespace ADM.CableTrayAnnotationHelper
                 "\tВам небходимо выбрать семейство \"Компонентов узла\" на основе линии. Далее поставьте галочки на те элементы, которые необходимо аннотировать," +
                 " и выберите соответствующие типоразмеры узлов.";//дописать
             MessageBox.Show(msg, "Справка");
-
         }
 
         private void ComboBoxFamilyName_SelectionChanged(object sender, SelectionChangedEventArgs e)
