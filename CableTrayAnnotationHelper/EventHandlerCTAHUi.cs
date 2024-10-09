@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace CableTrayAnnotationHelper
 {
-    public class EventHandlerCTAHUiArg : RevitEventWrapper<CTAHUi>
+    public class EventHandlerCTAHUi : RevitEventWrapper<CTAHUi>
     {
         public override void Execute(UIApplication uiApp, CTAHUi ui)
         {

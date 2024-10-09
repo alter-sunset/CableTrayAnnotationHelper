@@ -40,7 +40,7 @@ namespace CableTrayAnnotationHelper
         {
             if (_mMyFormCTAH != null && _mMyFormCTAH == null) return;
 
-            EventHandlerCTAHUiArg evUi = new();
+            EventHandlerCTAHUi evUi = new();
 
             Document document = uiApp.ActiveUIDocument.Document;
 

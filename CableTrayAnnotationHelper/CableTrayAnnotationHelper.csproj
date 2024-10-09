@@ -1,20 +1,17 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <TargetFramework>net8.0-windows</TargetFramework>
-    <OutputType>Library</OutputType>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <UseWindowsForms>true</UseWindowsForms>
-    <UseWPF>true</UseWPF>
-    <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
-  </PropertyGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Resources\cableTray.png" />
-    <EmbeddedResource Include="Resources\cableTray_16.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
-    <PackageReference Include="Nice3point.Revit.Api.RevitAPI" Version="2025.2.0" />
-    <PackageReference Include="Nice3point.Revit.Api.RevitAPIUI" Version="2025.2.0" />
-    <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
-  </ItemGroup>
+	<PropertyGroup>
+		<TargetFramework>net8.0-windows</TargetFramework>
+		<OutputType>Library</OutputType>
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<UseWPF>true</UseWPF>
+		<ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
+	</PropertyGroup>
+	<ItemGroup>
+		<EmbeddedResource Include="Resources\cableTray.png" />
+		<EmbeddedResource Include="Resources\cableTray_16.png" />
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Nice3point.Revit.Api.RevitAPI" Version="2025.2.0" />
+		<PackageReference Include="Nice3point.Revit.Api.RevitAPIUI" Version="2025.2.0" />
+	</ItemGroup>
 </Project>

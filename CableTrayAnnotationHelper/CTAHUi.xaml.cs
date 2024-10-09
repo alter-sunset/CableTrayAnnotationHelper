@@ -1,28 +1,24 @@
 ﻿using Autodesk.Revit.DB;
-using Autodesk.Revit.UI;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
-using MessageBox = System.Windows.Forms.MessageBox;
 
 namespace CableTrayAnnotationHelper
 {
     public partial class CTAHUi : Window
     {
-        private readonly EventHandlerCTAHUiArg _eventHandlerCTAHUiArg;
+        private readonly EventHandlerCTAHUi _eventHandlerCTAHUiArg;
         private readonly Dictionary<Family, List<FamilySymbol>> _families;
         public Family Family;
         public FamilySymbol SymbolConduit;
         public FamilySymbol SymbolCableTray;
 
-        public CTAHUi(EventHandlerCTAHUiArg eventHandlerCTAHUiArg, Dictionary<Family, List<FamilySymbol>> families)
+        public CTAHUi(EventHandlerCTAHUi eventHandlerCTAHUiArg, Dictionary<Family, List<FamilySymbol>> families)
         {
             InitializeComponent();
-
             _eventHandlerCTAHUiArg = eventHandlerCTAHUiArg;
             _families = families;
-
             ComboBoxFamilyName.ItemsSource = _families.Select(e => e.Key.Name);
         }
 
@@ -63,41 +59,27 @@ namespace CableTrayAnnotationHelper
         private void ButtonStart_Click(object sender, RoutedEventArgs e)
         {
             if (IsEverythingFilled())
-            {
                 _eventHandlerCTAHUiArg.Raise(this);
-            }
             else
-            {
                 MessageBox.Show("Заполните необходимые поля!");
-            }
         }
 
-        private void ComboBoxCableTray_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
+        private void ComboBoxCableTray_SelectionChanged(object sender, SelectionChangedEventArgs e) =>
             SymbolCableTray = _families
                 .First(f => f.Key == Family)
                 .Value
                 .FirstOrDefault(s => s.Name == (string)ComboBoxCableTray.SelectedItem);
-        }
 
-        private void ComboBoxConduit_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
+        private void ComboBoxConduit_SelectionChanged(object sender, SelectionChangedEventArgs e) =>
             SymbolConduit = _families
                 .First(f => f.Key == Family)
                 .Value
                 .FirstOrDefault(s => s.Name == (string)ComboBoxConduit.SelectedItem);
-        }
 
-        private bool IsEverythingFilled()
-        {
-            if (ComboBoxFamilyName.SelectedItem == null
-                || (CheckBoxConduit.IsChecked == false && CheckBoxCableTray.IsChecked == false)
-                || (CheckBoxConduit.IsChecked == true && ComboBoxConduit.SelectedItem == null)
-                || (CheckBoxCableTray.IsChecked == true && ComboBoxCableTray.SelectedItem == null))
-            {
-                return false;
-            }
-            return true;
-        }
+
+        private bool IsEverythingFilled() => !(ComboBoxFamilyName.SelectedItem is null
+                || (!(bool)CheckBoxConduit.IsChecked && !(bool)CheckBoxCableTray.IsChecked)
+                || ((bool)CheckBoxConduit.IsChecked && ComboBoxConduit.SelectedItem is null)
+                || ((bool)CheckBoxCableTray.IsChecked && ComboBoxCableTray.SelectedItem is null));
     }
 }
