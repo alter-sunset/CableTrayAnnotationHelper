@@ -4,36 +4,56 @@ using System.Linq;
 using System.IO;
 using System.Reflection;
 using System.Windows.Media.Imaging;
+using Autodesk.Revit.UI;
 
 namespace CableTrayAnnotationHelper
 {
     public static class Utils
     {
         public static void PlaceTheLines(Document mainDocument,
-            Document linkedDocument,
+            RevitLinkInstance link,
             View view,
             BuiltInCategory builtInCategory,
             List<FamilyInstance> existingDetailLines,
             FamilySymbol familySymbol,
-            List<ParameterAssociation> paramsTable)
+            List<ParameterAssociation> paramsTable,
+            out bool noLinkedView)
         {
-            //problem with viewId, it seems i need to provide a view from a linked document, not main document
-            using FilteredElementCollector collector = new(linkedDocument, view.Id);
-            List<Element> elements = collector
-                .OfCategory(builtInCategory)
-                .Where(e => e != null)
-                .ToList();
+            noLinkedView = false;
+            Document linkedDocument = link.GetLinkDocument();
+            ElementId linkedDocId = link.GetTypeId();
+
+            RevitLinkGraphicsSettings linkGraphicsSettings = view.GetLinkOverrides(linkedDocId);
+            if (linkGraphicsSettings is null) return;
+            ElementId linkedViewId = linkGraphicsSettings.LinkedViewId;
+
+            HashSet<string> detailLineIds = existingDetailLines
+                .Select(i => i.LookupParameter(paramsTable
+                    .First(p => p.ParameterType == ParameterType.Id)
+                    .ParameterOut)?
+                    .AsString())
+                .Where(id => id != null)
+                .Distinct()
+                .ToHashSet();
+            List<Element> elements;
+            try
+            {
+                elements = new FilteredElementCollector(linkedDocument, linkedViewId)
+                   .OfCategory(builtInCategory)
+                   .Where(e => e != null && !detailLineIds.Contains(e.UniqueId))
+                   .ToList();
+            }
+            catch
+            {
+                noLinkedView = true;
+                TaskDialog.Show("Ошибка!", "Нет связанного вида");
+                return;
+            }
+
+            if (elements.Count == 0) return;
 
             foreach (Element element in elements)
             {
-                if (element is null
-                    || existingDetailLines.
-                        Any(e => e.LookupParameter(paramsTable
-                                .First(p => p.ParameterType == ParameterType.Id)
-                                .ParameterOut)
-                            .AsString() == element.UniqueId))
-                    continue;
-
                 Line line = element.GetTheLine();
                 DetailCurve detailLine = mainDocument.Create.NewDetailCurve(view, line);
                 Line baseLine = detailLine.GeometryCurve as Line;
@@ -44,18 +64,15 @@ namespace CableTrayAnnotationHelper
                 {
                     Parameter valueIn = element.LookupParameter(param.ParameterIn);
                     Parameter valueOut = insertNew.LookupParameter(param.ParameterOut);
-                    if (valueIn is null || valueOut is null)
-                        continue;
 
+                    if (valueIn is null || valueOut is null) continue;
                     switch (param.ParameterType)
                     {
-                        case ParameterType.String:
-                            if (valueIn.StorageType is StorageType.String)
-                                valueOut.Set(valueIn.AsString());
+                        case ParameterType.String when valueIn.StorageType == StorageType.String:
+                            valueOut.Set(valueIn.AsString());
                             break;
-                        case ParameterType.Double:
-                            if (valueIn.StorageType is StorageType.Double)
-                                valueOut.Set(valueIn.AsDouble());
+                        case ParameterType.Double when valueIn.StorageType == StorageType.Double:
+                            valueOut.Set(valueIn.AsDouble());
                             break;
                         case ParameterType.Id:
                             valueOut.Set(element.UniqueId);
@@ -65,6 +82,7 @@ namespace CableTrayAnnotationHelper
                 mainDocument.Delete(detailLine.Id);
             }
         }
+
         private static Line GetTheLine(this Element element) => (element.Location as LocationCurve).Curve as Line;
 
         public static BitmapSource GetEmbeddedImage(string name)
@@ -84,16 +102,13 @@ namespace CableTrayAnnotationHelper
             new FilteredElementCollector(document, view.Id)
                 .OfClass(typeof(FamilyInstance))
                 .OfCategory(BuiltInCategory.OST_DetailComponents)
-                .Where(e => e != null)
                 .Cast<FamilyInstance>()
                 .Where(e => e.Symbol.FamilyName == family.Name && e.Name == symbol.Name)
                 .ToList();
-        public static List<Document> GetLinkedDocuments(Document document) =>
+        public static List<RevitLinkInstance> GetLinkedDocuments(Document document) =>
             new FilteredElementCollector(document)
-                .OfClass(typeof(RevitLinkInstance))
-                .Cast<RevitLinkInstance>()
-                .Select(l => l.GetLinkDocument())
-                .Where(d => d != null)
+                .WhereElementIsNotElementType()
+                .OfType<RevitLinkInstance>()
                 .ToList();
     }
 }

@@ -12,7 +12,7 @@ namespace CableTrayAnnotationHelper
         {
             try
             {
-                App.ThisApp.ShowFormCTAH(commandData.Application);
+                App.ShowFormCTAH(commandData.Application);
                 return Result.Succeeded;
             }
             catch (Exception ex)

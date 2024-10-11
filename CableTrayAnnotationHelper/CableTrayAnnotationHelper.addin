@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RevitAddIns>
+	<AddIn Type="Application">
+		<Name>CableTrayAnnotationHelper</Name>
+		<FullClassName>CableTrayAnnotationHelper.App</FullClassName>
+		<Assembly>CableTrayAnnotationHelper.dll</Assembly>
+		<AddInId>81BFE2BC-016A-4B88-8404-0EFFE78E0B78</AddInId>
+		<VendorId>ALTR</VendorId>
+		<VendorDescription>alter-sunset</VendorDescription>
+	</AddIn>
+</RevitAddIns>
