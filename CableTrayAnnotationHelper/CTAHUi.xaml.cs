@@ -13,7 +13,7 @@ namespace CableTrayAnnotationHelper
         public Family Family;
         public FamilySymbol SymbolConduit;
         public FamilySymbol SymbolCableTray;
-
+        //TODO: Change Model-View to MVVM
         public CTAHUi(EventHandlerCTAHUi eventHandlerCTAHUiArg, Dictionary<Family, List<FamilySymbol>> families)
         {
             InitializeComponent();

@@ -37,7 +37,7 @@ namespace CableTrayAnnotationHelper
                 .ToHashSet();
             List<Element> elements;
             try
-            {
+            {//TODO: add check for modified trays
                 elements = new FilteredElementCollector(linkedDocument, linkedViewId)
                    .OfCategory(builtInCategory)
                    .Where(e => e != null && !detailLineIds.Contains(e.UniqueId))

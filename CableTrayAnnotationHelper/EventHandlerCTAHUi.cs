@@ -65,7 +65,7 @@ namespace CableTrayAnnotationHelper
                         BuiltInCategory.OST_Conduit, existingDetailLinesConduit, symbolConduit, paramsTable))
                         continue;
 
-                    if (isCableTrayChecked
+                    if (isCableTrayChecked //TODO: Create class to hold parameters
                         && !TryPlaceLines(mainDocument, link, view,
                         BuiltInCategory.OST_CableTray, existingDetailLinesCableTray, symbolCableTray, paramsTable))
                         continue;
