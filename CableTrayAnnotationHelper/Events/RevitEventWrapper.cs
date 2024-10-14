@@ -1,6 +1,6 @@
 ﻿using Autodesk.Revit.UI;
 
-namespace CableTrayAnnotationHelper
+namespace CableTrayAnnotationHelper.Events
 {
     public abstract class RevitEventWrapper<TType> : IExternalEventHandler
     {

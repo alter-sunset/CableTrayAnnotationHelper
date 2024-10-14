@@ -1,4 +1,4 @@
-﻿namespace CableTrayAnnotationHelper
+﻿namespace CableTrayAnnotationHelper.Events
 {
     public class ParameterAssociation
     {

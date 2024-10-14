@@ -15,8 +15,8 @@
 		<PackageReference Include="Nice3point.Revit.Api.RevitAPIUI" Version="2025.2.0" />
 	</ItemGroup>
 	<ItemGroup>
-	  <None Update="CableTrayAnnotationHelper.addin">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </None>
+		<None Update="CableTrayAnnotationHelper.addin">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
 	</ItemGroup>
 </Project>

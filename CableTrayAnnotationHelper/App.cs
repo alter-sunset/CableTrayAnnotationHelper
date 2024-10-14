@@ -1,16 +1,19 @@
 ﻿using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Collections.Generic;
 using System.Windows.Media.Imaging;
+using CableTrayAnnotationHelper.MVVM;
+using CableTrayAnnotationHelper.Events;
+using System.IO;
 
 namespace CableTrayAnnotationHelper
 {
     public class App : IExternalApplication
     {
         public static App ThisApp;
-        private static CTAHUi _mMyFormCTAH;
+        private static ViewCTAH _mMyFormCTAH;
 
         public Result OnStartup(UIControlledApplication a)
         {
@@ -25,74 +28,37 @@ namespace CableTrayAnnotationHelper
                 "CableTrayAnnotationHelper.Resources.cableTray16.png"
             ];
 
-            PushButtonData CTAHButtonData = new
+            PushButtonData ButtonDataCTAH = new
             (
-                "Лотки и короба",
+                "CableTraysAndConduits",
                 "Лотки и\nкороба",
                 thisAssemblyPath,
-                "CableTrayAnnotationHelper.CTAH"
+                "CableTrayAnnotationHelper.MVVM.CTAH"
             );
 
-            string CTAHToolTip = "Расстановка аннотаций лотков и коробов";
-            CreateNewPushButton(panel, CTAHButtonData, CTAHToolTip, cableTrayIconPath);
+            string ToolTipCTAH = "Расстановка аннотаций лотков и коробов";
+            CreateNewPushButton(panel, ButtonDataCTAH, ToolTipCTAH, cableTrayIconPath);
 
             return Result.Succeeded;
         }
 
         public Result OnShutdown(UIControlledApplication a) => Result.Succeeded;
 
-        public static void ShowFormCTAH(UIApplication uiApp)
-        {
-            CloseCurrentForm();
-            EventHandlerCTAHUi evUi = new();
-
-            Document document = uiApp.ActiveUIDocument.Document;
-
-            Dictionary<Family, List<FamilySymbol>> families = new FilteredElementCollector(document)
-                .OfClass(typeof(FamilySymbol))
-                .OfCategory(BuiltInCategory.OST_DetailComponents)
-                .Where(e => e.get_Parameter(BuiltInParameter.FAMILY_LINE_LENGTH_PARAM) is not null)
-                .Cast<FamilySymbol>()
-                .GroupBy(e => e.Family, new FamilyComparer())
-                .ToDictionary(e => e.Key, e => e.ToList());
-
-            _mMyFormCTAH = new CTAHUi(evUi, families) { Height = 240, Width = 800 };
-            _mMyFormCTAH.Show();
-        }
-        private static void CloseCurrentForm()
-        {
-            if (_mMyFormCTAH is not null)
-            {
-                _mMyFormCTAH.Close();
-                _mMyFormCTAH = null;
-            }
-        }
-
-        public static RibbonPanel RibbonPanel(UIControlledApplication a)
+        private static RibbonPanel RibbonPanel(UIControlledApplication a)
         {
             const string TAB = "AlterTools";
             const string PANEL_NAME = "ЭОМ";
 
-            try
-            {
-                a.CreateRibbonTab(TAB);
-            }
-            catch { }
-
-            // Try to create ribbon panel.
-            try
-            {
-                a.CreateRibbonPanel(TAB, PANEL_NAME);
-            }
-            catch { }
+            a.CreateRibbonTab(TAB);
+            a.CreateRibbonPanel(TAB, PANEL_NAME);
 
             return a.GetRibbonPanels(TAB).FirstOrDefault(p => p.Name == PANEL_NAME);
         }
 
-        static void CreateNewPushButton(RibbonPanel ribbonPanel, PushButtonData pushButtonData, string toolTip, string[] iconPath)
+        private static void CreateNewPushButton(RibbonPanel ribbonPanel, PushButtonData pushButtonData, string toolTip, string[] iconPath)
         {
-            BitmapSource bitmap_32 = Utils.GetEmbeddedImage(iconPath[0]);
-            BitmapSource bitmap_16 = Utils.GetEmbeddedImage(iconPath[1]);
+            BitmapFrame bitmap_32 = GetEmbeddedImage(iconPath[0]);
+            BitmapFrame bitmap_16 = GetEmbeddedImage(iconPath[1]);
             PushButton pushButton = ribbonPanel.AddItem(pushButtonData) as PushButton;
 
             if (pushButton is not null)
@@ -100,6 +66,19 @@ namespace CableTrayAnnotationHelper
                 pushButton.ToolTip = toolTip;
                 pushButton.Image = bitmap_16;
                 pushButton.LargeImage = bitmap_32;
+            }
+        }
+        private static BitmapFrame GetEmbeddedImage(string name)
+        {
+            try
+            {
+                Assembly a = Assembly.GetExecutingAssembly();
+                Stream s = a.GetManifestResourceStream(name);
+                return BitmapFrame.Create(s);
+            }
+            catch
+            {
+                return null;
             }
         }
     }
