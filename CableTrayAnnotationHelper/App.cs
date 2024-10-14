@@ -21,8 +21,8 @@ namespace CableTrayAnnotationHelper
             string thisAssemblyPath = Assembly.GetExecutingAssembly().Location;
             string[] cableTrayIconPath =
             [
-                "CableTrayAnnotationHelper.Resources.cableTray.png",
-                "CableTrayAnnotationHelper.Resources.cableTray_16.png"
+                "CableTrayAnnotationHelper.Resources.cableTray32.png",
+                "CableTrayAnnotationHelper.Resources.cableTray16.png"
             ];
 
             PushButtonData CTAHButtonData = new

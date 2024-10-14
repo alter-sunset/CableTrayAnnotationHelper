@@ -7,8 +7,8 @@
 		<ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
 	</PropertyGroup>
 	<ItemGroup>
-		<EmbeddedResource Include="Resources\cableTray.png" />
-		<EmbeddedResource Include="Resources\cableTray_16.png" />
+		<EmbeddedResource Include="Resources\cableTray32.png" />
+		<EmbeddedResource Include="Resources\cableTray16.png" />
 	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="Nice3point.Revit.Api.RevitAPI" Version="2025.2.0" />
