@@ -1,24 +1,46 @@
 ﻿using Autodesk.Revit.DB;
-using System.Collections.Generic;
-using System.Linq;
-using System.IO;
-using System.Reflection;
-using System.Windows.Media.Imaging;
 using Autodesk.Revit.UI;
+using System.Linq;
+using System.Collections.Generic;
+using CableTrayAnnotationHelper.MVVM;
 
-namespace CableTrayAnnotationHelper
+namespace CableTrayAnnotationHelper.Events
 {
-    public static class Utils
+    public static class EventHelper
     {
-        public static void PlaceTheLines(Document mainDocument,
-            RevitLinkInstance link,
-            View view,
-            BuiltInCategory builtInCategory,
-            List<FamilyInstance> existingDetailLines,
-            FamilySymbol familySymbol,
-            List<ParameterAssociation> paramsTable,
-            out bool noLinkedView)
+        public static bool IsEverythingFilled(this ViewModelCTAH viewModel) =>
+            !(viewModel.SelectedFamily is null
+            || !viewModel.IncludeConduit && !viewModel.IncludeCableTray
+            || viewModel.IncludeConduit && viewModel.SelectedConduit is null
+            || viewModel.IncludeCableTray && viewModel.SelectedCableTray is null);
+        public static List<RevitLinkInstance> GetLinkedDocuments(this Document document) =>
+            new FilteredElementCollector(document)
+                .WhereElementIsNotElementType()
+                .OfType<RevitLinkInstance>()
+                .ToList();
+        public static List<FamilyInstance> GetExistingDetailLines(this Document document, View view, Family family, FamilySymbol symbol) =>
+            new FilteredElementCollector(document, view.Id)
+                .OfClass(typeof(FamilyInstance))
+                .OfCategory(BuiltInCategory.OST_DetailComponents)
+                .Cast<FamilyInstance>()
+                .Where(e => e.Symbol.FamilyName == family.Name && e.Name == symbol.Name)
+                .ToList();
+        public static bool TryPlaceLines(this PlaceLinesHolder linesHolder)
         {
+            if (linesHolder.FamilySymbol is null) return false;
+            linesHolder.PlaceTheLines(out bool noLinkedView);
+            return noLinkedView;
+        }
+        private static void PlaceTheLines(this PlaceLinesHolder linesHolder, out bool noLinkedView)
+        {
+            Document mainDocument = linesHolder.Document;
+            RevitLinkInstance link = linesHolder.LinkInstance;
+            View view = linesHolder.View;
+            BuiltInCategory builtInCategory = linesHolder.BuiltInCategory;
+            List<FamilyInstance> existingDetailLines = linesHolder.ExistingDetailLines;
+            FamilySymbol familySymbol = linesHolder.FamilySymbol;
+            List<ParameterAssociation> paramsTable = linesHolder.Parameters;
+
             noLinkedView = false;
             Document linkedDocument = link.GetLinkDocument();
             ElementId linkedDocId = link.GetTypeId();
@@ -37,7 +59,7 @@ namespace CableTrayAnnotationHelper
                 .ToHashSet();
             List<Element> elements;
             try
-            {
+            {//TODO: add check for modified trays
                 elements = new FilteredElementCollector(linkedDocument, linkedViewId)
                    .OfCategory(builtInCategory)
                    .Where(e => e != null && !detailLineIds.Contains(e.UniqueId))
@@ -82,33 +104,6 @@ namespace CableTrayAnnotationHelper
                 mainDocument.Delete(detailLine.Id);
             }
         }
-
         private static Line GetTheLine(this Element element) => (element.Location as LocationCurve).Curve as Line;
-
-        public static BitmapSource GetEmbeddedImage(string name)
-        {
-            try
-            {
-                Assembly a = Assembly.GetExecutingAssembly();
-                Stream s = a.GetManifestResourceStream(name);
-                return BitmapFrame.Create(s);
-            }
-            catch
-            {
-                return null;
-            }
-        }
-        public static List<FamilyInstance> ExistingDetailLines(Document document, View view, Family family, FamilySymbol symbol) =>
-            new FilteredElementCollector(document, view.Id)
-                .OfClass(typeof(FamilyInstance))
-                .OfCategory(BuiltInCategory.OST_DetailComponents)
-                .Cast<FamilyInstance>()
-                .Where(e => e.Symbol.FamilyName == family.Name && e.Name == symbol.Name)
-                .ToList();
-        public static List<RevitLinkInstance> GetLinkedDocuments(Document document) =>
-            new FilteredElementCollector(document)
-                .WhereElementIsNotElementType()
-                .OfType<RevitLinkInstance>()
-                .ToList();
     }
 }
