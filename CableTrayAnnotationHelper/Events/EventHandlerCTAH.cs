@@ -21,7 +21,7 @@ namespace CableTrayAnnotationHelper.Events
             Document mainDocument = uIDocument.Document;
             View view = uIDocument.ActiveGraphicalView;
 
-            //TODO: move parameters initialization to viewModel
+            //TODO: move parameters initialization to viewModel (json?)
             List<ParameterAssociation> paramsTable =
             [
                 new(){ParameterIn = "Марка", ParameterOut = "ADSK_Примечание", ParameterType = ParameterType.Id},
@@ -53,6 +53,15 @@ namespace CableTrayAnnotationHelper.Events
                 existingDetailLinesConduit =
                     mainDocument.GetExistingDetailLines(view, familyDetail, symbolConduit);
             }
+            PlaceLinesHolder conduitHolder = new()
+            {
+                Document = mainDocument,
+                View = view,
+                BuiltInCategory = BuiltInCategory.OST_Conduit,
+                ExistingDetailLines = existingDetailLinesConduit,
+                FamilySymbol = symbolConduit,
+                Parameters = paramsTable,
+            };
 
             bool includeCableTray = viewModel.IncludeCableTray;
             if (includeCableTray)
@@ -61,6 +70,15 @@ namespace CableTrayAnnotationHelper.Events
                 existingDetailLinesCableTray =
                     mainDocument.GetExistingDetailLines(view, familyDetail, symbolCableTray);
             }
+            PlaceLinesHolder cableTrayHolder = new()
+            {
+                Document = mainDocument,
+                View = view,
+                BuiltInCategory = BuiltInCategory.OST_CableTray,
+                ExistingDetailLines = existingDetailLinesCableTray,
+                FamilySymbol = symbolCableTray,
+                Parameters = paramsTable,
+            };
 
             try
             {
@@ -74,15 +92,11 @@ namespace CableTrayAnnotationHelper.Events
                 {
                     if (link is null) continue;
 
-                    if (includeConduit
-                        && !mainDocument.TryPlaceLines(link, view, BuiltInCategory.OST_Conduit,
-                            existingDetailLinesConduit, symbolConduit, paramsTable))
-                        continue;
+                    conduitHolder.LinkInstance = link;
+                    if (includeConduit && conduitHolder.TryPlaceLines()) continue;
 
-                    if (includeCableTray //TODO: Create class to hold parameters
-                        && !mainDocument.TryPlaceLines(link, view, BuiltInCategory.OST_CableTray,
-                            existingDetailLinesCableTray, symbolCableTray, paramsTable))
-                        continue;
+                    cableTrayHolder.LinkInstance = link;
+                    if (includeCableTray && cableTrayHolder.TryPlaceLines()) continue;
                 }
                 transaction.Commit();
             }

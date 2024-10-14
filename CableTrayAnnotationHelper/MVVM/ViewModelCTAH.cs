@@ -1,10 +1,10 @@
 ﻿using Autodesk.Revit.DB;
-using CableTrayAnnotationHelper.Events;
+using System.Windows;
+using System.ComponentModel;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using System.Windows;
+using CableTrayAnnotationHelper.Events;
 
 namespace CableTrayAnnotationHelper.MVVM
 {

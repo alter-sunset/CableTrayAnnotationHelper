@@ -1,25 +1,15 @@
-﻿using Autodesk.Revit.DB;
-using Autodesk.Revit.UI;
+﻿using Autodesk.Revit.UI;
+using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Collections.Generic;
 using System.Windows.Media.Imaging;
-using CableTrayAnnotationHelper.MVVM;
-using CableTrayAnnotationHelper.Events;
-using System.IO;
 
 namespace CableTrayAnnotationHelper
 {
     public class App : IExternalApplication
     {
-        public static App ThisApp;
-        private static ViewCTAH _mMyFormCTAH;
-
         public Result OnStartup(UIControlledApplication a)
         {
-            ThisApp = this;
-            _mMyFormCTAH = null;
-
             RibbonPanel panel = RibbonPanel(a);
             string thisAssemblyPath = Assembly.GetExecutingAssembly().Location;
             string[] cableTrayIconPath =

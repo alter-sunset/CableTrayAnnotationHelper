@@ -1,8 +1,8 @@
 ﻿using Autodesk.Revit.DB;
+using Autodesk.Revit.UI;
+using System.Linq;
 using System.Collections.Generic;
 using CableTrayAnnotationHelper.MVVM;
-using System.Linq;
-using Autodesk.Revit.UI;
 
 namespace CableTrayAnnotationHelper.Events
 {
@@ -25,21 +25,22 @@ namespace CableTrayAnnotationHelper.Events
                 .Cast<FamilyInstance>()
                 .Where(e => e.Symbol.FamilyName == family.Name && e.Name == symbol.Name)
                 .ToList();
-        public static bool TryPlaceLines(this Document mainDocument, RevitLinkInstance link, View view, BuiltInCategory category, List<FamilyInstance> existingLines, FamilySymbol symbol, List<ParameterAssociation> paramsTable)
+        public static bool TryPlaceLines(this PlaceLinesHolder linesHolder)
         {
-            if (symbol is null) return false;
-            mainDocument.PlaceTheLines(link, view, category, existingLines, symbol, paramsTable, out bool noLinkedView);
-            return !noLinkedView;
+            if (linesHolder.FamilySymbol is null) return false;
+            linesHolder.PlaceTheLines(out bool noLinkedView);
+            return noLinkedView;
         }
-        private static void PlaceTheLines(this Document mainDocument,
-           RevitLinkInstance link,
-           View view,
-           BuiltInCategory builtInCategory,
-           List<FamilyInstance> existingDetailLines,
-           FamilySymbol familySymbol,
-           List<ParameterAssociation> paramsTable,
-           out bool noLinkedView)
+        private static void PlaceTheLines(this PlaceLinesHolder linesHolder, out bool noLinkedView)
         {
+            Document mainDocument = linesHolder.Document;
+            RevitLinkInstance link = linesHolder.LinkInstance;
+            View view = linesHolder.View;
+            BuiltInCategory builtInCategory = linesHolder.BuiltInCategory;
+            List<FamilyInstance> existingDetailLines = linesHolder.ExistingDetailLines;
+            FamilySymbol familySymbol = linesHolder.FamilySymbol;
+            List<ParameterAssociation> paramsTable = linesHolder.Parameters;
+
             noLinkedView = false;
             Document linkedDocument = link.GetLinkDocument();
             ElementId linkedDocId = link.GetTypeId();
