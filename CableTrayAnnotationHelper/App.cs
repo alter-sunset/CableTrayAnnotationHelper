@@ -12,11 +12,6 @@ namespace CableTrayAnnotationHelper
         {
             RibbonPanel panel = RibbonPanel(a);
             string thisAssemblyPath = Assembly.GetExecutingAssembly().Location;
-            string[] cableTrayIconPath =
-            [
-                "CableTrayAnnotationHelper.Resources.cableTray32.png",
-                "CableTrayAnnotationHelper.Resources.cableTray16.png"
-            ];
 
             PushButtonData ButtonDataCTAH = new
             (
@@ -26,7 +21,13 @@ namespace CableTrayAnnotationHelper
                 "CableTrayAnnotationHelper.MVVM.CTAH"
             );
 
+            string[] cableTrayIconPath =
+            [
+                "CableTrayAnnotationHelper.Resources.cableTray16.png",
+                "CableTrayAnnotationHelper.Resources.cableTray32.png",
+            ];
             string ToolTipCTAH = "Расстановка аннотаций лотков и коробов";
+
             CreateNewPushButton(panel, ButtonDataCTAH, ToolTipCTAH, cableTrayIconPath);
 
             return Result.Succeeded;
@@ -39,24 +40,21 @@ namespace CableTrayAnnotationHelper
             const string TAB = "AlterTools";
             const string PANEL_NAME = "ЭОМ";
 
-            a.CreateRibbonTab(TAB);
-            a.CreateRibbonPanel(TAB, PANEL_NAME);
+            try { a.CreateRibbonTab(TAB); }
+            catch { }
+            try { a.CreateRibbonPanel(TAB, PANEL_NAME); }
+            catch { }
 
             return a.GetRibbonPanels(TAB).FirstOrDefault(p => p.Name == PANEL_NAME);
         }
 
         private static void CreateNewPushButton(RibbonPanel ribbonPanel, PushButtonData pushButtonData, string toolTip, string[] iconPath)
         {
-            BitmapFrame bitmap_32 = GetEmbeddedImage(iconPath[0]);
-            BitmapFrame bitmap_16 = GetEmbeddedImage(iconPath[1]);
-            PushButton pushButton = ribbonPanel.AddItem(pushButtonData) as PushButton;
+            pushButtonData.ToolTip = toolTip;
+            pushButtonData.Image = GetEmbeddedImage(iconPath[0]);
+            pushButtonData.LargeImage = GetEmbeddedImage(iconPath[1]);
 
-            if (pushButton is not null)
-            {
-                pushButton.ToolTip = toolTip;
-                pushButton.Image = bitmap_16;
-                pushButton.LargeImage = bitmap_32;
-            }
+            ribbonPanel.AddItem(pushButtonData);
         }
         private static BitmapFrame GetEmbeddedImage(string name)
         {

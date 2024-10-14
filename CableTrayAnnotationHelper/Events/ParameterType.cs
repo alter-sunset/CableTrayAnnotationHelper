@@ -3,7 +3,9 @@
     public enum ParameterType
     {
         String,
+        Integer,
         Double,
-        Id
+        Id,
+        None
     }
 }

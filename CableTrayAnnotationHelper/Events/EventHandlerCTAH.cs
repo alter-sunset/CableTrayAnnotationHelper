@@ -24,7 +24,7 @@ namespace CableTrayAnnotationHelper.Events
             //TODO: move parameters initialization to viewModel (json?)
             List<ParameterAssociation> paramsTable =
             [
-                new(){ParameterIn = "Марка", ParameterOut = "ADSK_Примечание", ParameterType = ParameterType.Id},
+                new(){ParameterIn = "", ParameterOut = "ADSK_Примечание", ParameterType = ParameterType.Id},
                 new(){ParameterIn = "Этаж", ParameterOut = "Этаж", ParameterType = ParameterType.String},
                 new(){ParameterIn = "Параметры фильтрации", ParameterOut = "Параметры фильтрации", ParameterType = ParameterType.String},
                 new(){ParameterIn = "Высота", ParameterOut = "ADSK_Размер_Высота", ParameterType = ParameterType.Double},
@@ -34,7 +34,7 @@ namespace CableTrayAnnotationHelper.Events
 
             List<RevitLinkInstance> links = mainDocument.GetLinkedDocuments();
 
-            if (links is null)
+            if (links is null || links.Count == 0)
             {
                 TaskDialog.Show("Error", "There are no links in the model");
                 return;

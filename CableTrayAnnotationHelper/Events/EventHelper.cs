@@ -16,7 +16,8 @@ namespace CableTrayAnnotationHelper.Events
         public static List<RevitLinkInstance> GetLinkedDocuments(this Document document) =>
             new FilteredElementCollector(document)
                 .WhereElementIsNotElementType()
-                .OfType<RevitLinkInstance>()
+                .OfClass(typeof(RevitLinkInstance))
+                .Cast<RevitLinkInstance>()
                 .ToList();
         public static List<FamilyInstance> GetExistingDetailLines(this Document document, View view, Family family, FamilySymbol symbol) =>
             new FilteredElementCollector(document, view.Id)
@@ -34,22 +35,18 @@ namespace CableTrayAnnotationHelper.Events
         private static void PlaceTheLines(this PlaceLinesHolder linesHolder, out bool noLinkedView)
         {
             Document mainDocument = linesHolder.Document;
-            RevitLinkInstance link = linesHolder.LinkInstance;
             View view = linesHolder.View;
-            BuiltInCategory builtInCategory = linesHolder.BuiltInCategory;
-            List<FamilyInstance> existingDetailLines = linesHolder.ExistingDetailLines;
-            FamilySymbol familySymbol = linesHolder.FamilySymbol;
             List<ParameterAssociation> paramsTable = linesHolder.Parameters;
 
             noLinkedView = false;
-            Document linkedDocument = link.GetLinkDocument();
-            ElementId linkedDocId = link.GetTypeId();
+            Document linkedDocument = linesHolder.LinkInstance.GetLinkDocument();
+            ElementId linkedDocId = linesHolder.LinkInstance.GetTypeId();
 
             RevitLinkGraphicsSettings linkGraphicsSettings = view.GetLinkOverrides(linkedDocId);
             if (linkGraphicsSettings is null) return;
             ElementId linkedViewId = linkGraphicsSettings.LinkedViewId;
 
-            HashSet<string> detailLineIds = existingDetailLines
+            HashSet<string> detailLineIds = linesHolder.ExistingDetailLines
                 .Select(i => i.LookupParameter(paramsTable
                     .First(p => p.ParameterType == ParameterType.Id)
                     .ParameterOut)?
@@ -61,7 +58,7 @@ namespace CableTrayAnnotationHelper.Events
             try
             {//TODO: add check for modified trays
                 elements = new FilteredElementCollector(linkedDocument, linkedViewId)
-                   .OfCategory(builtInCategory)
+                   .OfCategory(linesHolder.BuiltInCategory)
                    .Where(e => e != null && !detailLineIds.Contains(e.UniqueId))
                    .ToList();
             }
@@ -80,7 +77,7 @@ namespace CableTrayAnnotationHelper.Events
                 DetailCurve detailLine = mainDocument.Create.NewDetailCurve(view, line);
                 Line baseLine = detailLine.GeometryCurve as Line;
 
-                FamilyInstance insertNew = mainDocument.Create.NewFamilyInstance(baseLine, familySymbol, view);
+                FamilyInstance insertNew = mainDocument.Create.NewFamilyInstance(baseLine, linesHolder.FamilySymbol, view);
 
                 foreach (ParameterAssociation param in paramsTable)
                 {
@@ -93,11 +90,16 @@ namespace CableTrayAnnotationHelper.Events
                         case ParameterType.String when valueIn.StorageType == StorageType.String:
                             valueOut.Set(valueIn.AsString());
                             break;
+                        case ParameterType.Integer when valueIn.StorageType == StorageType.Integer:
+                            valueOut.Set(valueIn.AsInteger());
+                            break;
                         case ParameterType.Double when valueIn.StorageType == StorageType.Double:
                             valueOut.Set(valueIn.AsDouble());
                             break;
                         case ParameterType.Id:
                             valueOut.Set(element.UniqueId);
+                            break;
+                        default:
                             break;
                     }
                 }
