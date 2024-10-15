@@ -21,38 +21,30 @@ namespace CableTrayAnnotationHelper.Events
             Document mainDocument = uIDocument.Document;
             View view = uIDocument.ActiveGraphicalView;
 
-            //TODO: move parameters initialization to viewModel (json?)
-            List<ParameterAssociation> paramsTable =
-            [
-                new(){ParameterIn = "", ParameterOut = "ADSK_Примечание", ParameterType = ParameterType.Id},
-                new(){ParameterIn = "Этаж", ParameterOut = "Этаж", ParameterType = ParameterType.String},
-                new(){ParameterIn = "Параметры фильтрации", ParameterOut = "Параметры фильтрации", ParameterType = ParameterType.String},
-                new(){ParameterIn = "Высота", ParameterOut = "ADSK_Размер_Высота", ParameterType = ParameterType.Double},
-                new(){ParameterIn = "Длина", ParameterOut = "ADSK_Размер_Длина", ParameterType = ParameterType.Double},
-                new(){ParameterIn = "Ширина", ParameterOut = "ADSK_Размер_Ширина", ParameterType = ParameterType.Double}
-            ];
+            List<ParameterAssociation> paramsTable = EventHelper.GetParameterAssociations();
 
             List<RevitLinkInstance> links = mainDocument.GetLinkedDocuments();
 
             if (links is null || links.Count == 0)
             {
-                TaskDialog.Show("Error", "There are no links in the model");
+                TaskDialog.Show("Ошибка", "Связанные модели не найдены");
                 return;
             }
 
             Family familyDetail = viewModel.SelectedFamily;
-            FamilySymbol symbolConduit = null;
-            List<FamilyInstance> existingDetailLinesConduit = [];
-            FamilySymbol symbolCableTray = null;
-            List<FamilyInstance> existingDetailLinesCableTray = [];
-
             bool includeConduit = viewModel.IncludeConduit;
-            if (includeConduit)
-            {
-                symbolConduit = viewModel.SelectedConduit;
-                existingDetailLinesConduit =
-                    mainDocument.GetExistingDetailLines(view, familyDetail, symbolConduit);
-            }
+            bool includeCableTray = viewModel.IncludeCableTray;
+
+            FamilySymbol symbolConduit = includeConduit ? viewModel.SelectedConduit : null;
+            FamilySymbol symbolCableTray = includeCableTray ? viewModel.SelectedCableTray : null;
+
+            List<FamilyInstance> existingDetailLinesConduit = includeConduit
+                ? mainDocument.GetExistingDetailLines(view, familyDetail, symbolConduit)
+                : [];
+            List<FamilyInstance> existingDetailLinesCableTray = includeCableTray
+                ? mainDocument.GetExistingDetailLines(view, familyDetail, symbolCableTray)
+                : [];
+
             PlaceLinesHolder conduitHolder = new()
             {
                 Document = mainDocument,
@@ -62,14 +54,6 @@ namespace CableTrayAnnotationHelper.Events
                 FamilySymbol = symbolConduit,
                 Parameters = paramsTable,
             };
-
-            bool includeCableTray = viewModel.IncludeCableTray;
-            if (includeCableTray)
-            {
-                symbolCableTray = viewModel.SelectedCableTray;
-                existingDetailLinesCableTray =
-                    mainDocument.GetExistingDetailLines(view, familyDetail, symbolCableTray);
-            }
             PlaceLinesHolder cableTrayHolder = new()
             {
                 Document = mainDocument,
@@ -90,8 +74,6 @@ namespace CableTrayAnnotationHelper.Events
 
                 foreach (RevitLinkInstance link in links)
                 {
-                    if (link is null) continue;
-
                     conduitHolder.LinkInstance = link;
                     if (includeConduit && conduitHolder.TryPlaceLines()) continue;
 

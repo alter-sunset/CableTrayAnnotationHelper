@@ -4,13 +4,12 @@ namespace CableTrayAnnotationHelper.Events
 {
     public abstract class RevitEventWrapper<TType> : IExternalEventHandler
     {
-        private readonly object _lock;
+        private readonly object _lock = new();
         private TType _savedArgs;
         private readonly ExternalEvent _revitEvent;
         protected RevitEventWrapper()
         {
             _revitEvent = ExternalEvent.Create(this);
-            _lock = new object();
         }
         public void Execute(UIApplication app)
         {
@@ -24,10 +23,8 @@ namespace CableTrayAnnotationHelper.Events
 
             Execute(app, args);
         }
-        public string GetName()
-        {
-            return GetType().Name;
-        }
+        public string GetName() => GetType().Name;
+
         public void Raise(TType args)
         {
             lock (_lock)

@@ -1,14 +1,14 @@
 ﻿<Window x:Class="CableTrayAnnotationHelper.MVVM.ViewCTAH"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:CableTrayAnnotationHelper.MVVM"
-             mc:Ignorable="d" 
-             Height="240" Width="800"
-             ResizeMode="NoResize"
-             Title="Расстановка аннотаций лотков и коробов"
-             IsEnabled="{Binding IsViewEnabled}">
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:local="clr-namespace:CableTrayAnnotationHelper.MVVM"
+        mc:Ignorable="d" 
+        Height="240" Width="800"
+        ResizeMode="NoResize"
+        Title="Расстановка аннотаций лотков и коробов"
+        IsEnabled="{Binding IsViewEnabled}">
     <Grid Background="WhiteSmoke">
         <Grid.ColumnDefinitions>
             <ColumnDefinition/>

@@ -10,19 +10,15 @@ namespace CableTrayAnnotationHelper.MVVM
 {
     public class ViewModelCTAH : INotifyPropertyChanged
     {
+        private readonly EventHandlerCTAH _eventHandlerCTAH;
+        private readonly Dictionary<Family, List<FamilySymbol>> _familyPairs;
+
         public ViewModelCTAH(EventHandlerCTAH eventHandler, Dictionary<Family, List<FamilySymbol>> familyPairs)
         {
             _eventHandlerCTAH = eventHandler;
             _familyPairs = familyPairs;
             _families = new(_familyPairs.Keys);
         }
-
-        private readonly Dictionary<Family, List<FamilySymbol>> _familyPairs;
-
-        private readonly EventHandlerCTAH _eventHandlerCTAH;
-        private RelayCommand _raiseEventCommand;
-        public RelayCommand RaiseEventCommand =>
-            _raiseEventCommand ??= new RelayCommand(obj => _eventHandlerCTAH.Raise(this));
 
         private const string V = "\n";
         private const string HELP_MESSAGE =
@@ -32,10 +28,13 @@ namespace CableTrayAnnotationHelper.MVVM
             " и выберите соответствующие типоразмеры узлов." + V +
             "\tВажный момент. Плагин ищет лотки и короба только на связанных видах в связанных файлах." +
             " То есть для текущего вида обязательно должен быть выбран связанный вид.";
-
         private RelayCommand _helpCommand;
         public virtual RelayCommand HelpCommand =>
             _helpCommand ??= new RelayCommand(obj => MessageBox.Show(HELP_MESSAGE, "Справка"));
+
+        private RelayCommand _raiseEventCommand;
+        public RelayCommand RaiseEventCommand =>
+            _raiseEventCommand ??= new RelayCommand(obj => _eventHandlerCTAH.Raise(this));
 
         private bool _isViewEnabled = true;
         public bool IsViewEnabled

@@ -13,11 +13,21 @@ namespace CableTrayAnnotationHelper.Events
             || !viewModel.IncludeConduit && !viewModel.IncludeCableTray
             || viewModel.IncludeConduit && viewModel.SelectedConduit is null
             || viewModel.IncludeCableTray && viewModel.SelectedCableTray is null);
+        public static List<ParameterAssociation> GetParameterAssociations() =>
+        [//TODO: move parameters initialization to viewModel (json?)
+            new(){ParameterIn = "", ParameterOut = "ADSK_Примечание", ParameterType = ParameterType.Id},
+            new(){ParameterIn = "Этаж", ParameterOut = "Этаж", ParameterType = ParameterType.String},
+            new(){ParameterIn = "Параметры фильтрации", ParameterOut = "Параметры фильтрации", ParameterType = ParameterType.String},
+            new(){ParameterIn = "Высота", ParameterOut = "ADSK_Размер_Высота", ParameterType = ParameterType.Double},
+            new(){ParameterIn = "Длина", ParameterOut = "ADSK_Размер_Длина", ParameterType = ParameterType.Double},
+            new(){ParameterIn = "Ширина", ParameterOut = "ADSK_Размер_Ширина", ParameterType = ParameterType.Double}
+        ];
         public static List<RevitLinkInstance> GetLinkedDocuments(this Document document) =>
             new FilteredElementCollector(document)
                 .WhereElementIsNotElementType()
                 .OfClass(typeof(RevitLinkInstance))
                 .Cast<RevitLinkInstance>()
+                .Where(l => l is not null)
                 .ToList();
         public static List<FamilyInstance> GetExistingDetailLines(this Document document, View view, Family family, FamilySymbol symbol) =>
             new FilteredElementCollector(document, view.Id)
