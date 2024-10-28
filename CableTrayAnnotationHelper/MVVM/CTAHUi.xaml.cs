@@ -8,7 +8,7 @@ namespace CableTrayAnnotationHelper.MVVM
 {
     public partial class ViewCTAH : Window
     {
-        public ViewCTAH(EventHandlerCTAH eventHandler, Dictionary<Family, List<FamilySymbol>> families)
+        public ViewCTAH(EventHandlerCTAH eventHandler, Dictionary<Family, FamilySymbol[]> families)
         {
             InitializeComponent();
             DataContext = new ViewModelCTAH(eventHandler, families);

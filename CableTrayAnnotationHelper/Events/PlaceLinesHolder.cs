@@ -9,8 +9,8 @@ namespace CableTrayAnnotationHelper.Events
         public RevitLinkInstance LinkInstance { get; set; }
         public View View { get; set; }
         public BuiltInCategory BuiltInCategory { get; set; }
-        public List<FamilyInstance> ExistingDetailLines { get; set; }
+        public FamilyInstance[] ExistingDetailLines { get; set; }
         public FamilySymbol FamilySymbol { get; set; }
-        public List<ParameterAssociation> Parameters { get; set; }
+        public ParameterAssociation[] Parameters { get; set; }
     }
 }

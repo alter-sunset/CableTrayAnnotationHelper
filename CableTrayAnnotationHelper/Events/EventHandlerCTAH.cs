@@ -21,11 +21,10 @@ namespace CableTrayAnnotationHelper.Events
             Document mainDocument = uIDocument.Document;
             View view = uIDocument.ActiveGraphicalView;
 
-            List<ParameterAssociation> paramsTable = EventHelper.GetParameterAssociations();
+            ParameterAssociation[] paramsTable = EventHelper.GetParameterAssociations;
+            RevitLinkInstance[] links = mainDocument.GetLinkedDocuments();
 
-            List<RevitLinkInstance> links = mainDocument.GetLinkedDocuments();
-
-            if (links is null || links.Count == 0)
+            if (links is null || links.Length == 0)
             {
                 TaskDialog.Show("Ошибка", "Связанные модели не найдены");
                 return;
@@ -38,10 +37,10 @@ namespace CableTrayAnnotationHelper.Events
             FamilySymbol symbolConduit = includeConduit ? viewModel.SelectedConduit : null;
             FamilySymbol symbolCableTray = includeCableTray ? viewModel.SelectedCableTray : null;
 
-            List<FamilyInstance> existingDetailLinesConduit = includeConduit
+            FamilyInstance[] existingDetailLinesConduit = includeConduit
                 ? mainDocument.GetExistingDetailLines(view, familyDetail, symbolConduit)
                 : [];
-            List<FamilyInstance> existingDetailLinesCableTray = includeCableTray
+            FamilyInstance[] existingDetailLinesCableTray = includeCableTray
                 ? mainDocument.GetExistingDetailLines(view, familyDetail, symbolCableTray)
                 : [];
 

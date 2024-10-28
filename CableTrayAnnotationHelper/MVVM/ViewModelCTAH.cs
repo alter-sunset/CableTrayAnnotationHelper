@@ -11,9 +11,9 @@ namespace CableTrayAnnotationHelper.MVVM
     public class ViewModelCTAH : INotifyPropertyChanged
     {
         private readonly EventHandlerCTAH _eventHandlerCTAH;
-        private readonly Dictionary<Family, List<FamilySymbol>> _familyPairs;
+        private readonly Dictionary<Family, FamilySymbol[]> _familyPairs;
 
-        public ViewModelCTAH(EventHandlerCTAH eventHandler, Dictionary<Family, List<FamilySymbol>> familyPairs)
+        public ViewModelCTAH(EventHandlerCTAH eventHandler, Dictionary<Family, FamilySymbol[]> familyPairs)
         {
             _eventHandlerCTAH = eventHandler;
             _familyPairs = familyPairs;

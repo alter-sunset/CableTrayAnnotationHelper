@@ -33,13 +33,13 @@ namespace CableTrayAnnotationHelper.MVVM
 
             Document document = uiApp.ActiveUIDocument.Document;
 
-            Dictionary<Family, List<FamilySymbol>> families = new FilteredElementCollector(document)
+            Dictionary<Family, FamilySymbol[]> families = new FilteredElementCollector(document)
                 .OfClass(typeof(FamilySymbol))
                 .OfCategory(BuiltInCategory.OST_DetailComponents)
                 .Where(e => e.get_Parameter(BuiltInParameter.FAMILY_LINE_LENGTH_PARAM) is not null)
                 .Cast<FamilySymbol>()
                 .GroupBy(e => e.Family, new FamilyComparer())
-                .ToDictionary(e => e.Key, e => e.ToList());
+                .ToDictionary(e => e.Key, e => e.ToArray());
 
             _view = new ViewCTAH(eventHandler, families);
             _view.Show();

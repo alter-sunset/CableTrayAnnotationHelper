@@ -13,7 +13,8 @@ namespace CableTrayAnnotationHelper.Events
             || !viewModel.IncludeConduit && !viewModel.IncludeCableTray
             || viewModel.IncludeConduit && viewModel.SelectedConduit is null
             || viewModel.IncludeCableTray && viewModel.SelectedCableTray is null);
-        public static List<ParameterAssociation> GetParameterAssociations() =>
+
+        public static readonly ParameterAssociation[] GetParameterAssociations =
         [//TODO: move parameters initialization to viewModel (json?)
             new(){ParameterIn = "", ParameterOut = "ADSK_Примечание", ParameterType = ParameterType.Id},
             new(){ParameterIn = "Этаж", ParameterOut = "Этаж", ParameterType = ParameterType.String},
@@ -22,20 +23,20 @@ namespace CableTrayAnnotationHelper.Events
             new(){ParameterIn = "Длина", ParameterOut = "ADSK_Размер_Длина", ParameterType = ParameterType.Double},
             new(){ParameterIn = "Ширина", ParameterOut = "ADSK_Размер_Ширина", ParameterType = ParameterType.Double}
         ];
-        public static List<RevitLinkInstance> GetLinkedDocuments(this Document document) =>
+        public static RevitLinkInstance[] GetLinkedDocuments(this Document document) =>
             new FilteredElementCollector(document)
                 .WhereElementIsNotElementType()
                 .OfClass(typeof(RevitLinkInstance))
                 .Cast<RevitLinkInstance>()
                 .Where(l => l is not null)
-                .ToList();
-        public static List<FamilyInstance> GetExistingDetailLines(this Document document, View view, Family family, FamilySymbol symbol) =>
+                .ToArray();
+        public static FamilyInstance[] GetExistingDetailLines(this Document document, View view, Family family, FamilySymbol symbol) =>
             new FilteredElementCollector(document, view.Id)
                 .OfClass(typeof(FamilyInstance))
                 .OfCategory(BuiltInCategory.OST_DetailComponents)
                 .Cast<FamilyInstance>()
                 .Where(e => e.Symbol.FamilyName == family.Name && e.Name == symbol.Name)
-                .ToList();
+                .ToArray();
         public static bool TryPlaceLines(this PlaceLinesHolder linesHolder)
         {
             if (linesHolder.FamilySymbol is null) return false;
@@ -46,7 +47,7 @@ namespace CableTrayAnnotationHelper.Events
         {
             Document mainDocument = linesHolder.Document;
             View view = linesHolder.View;
-            List<ParameterAssociation> paramsTable = linesHolder.Parameters;
+            ParameterAssociation[] paramsTable = linesHolder.Parameters;
 
             noLinkedView = false;
             Document linkedDocument = linesHolder.LinkInstance.GetLinkDocument();
